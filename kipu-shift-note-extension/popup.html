@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kipu Shift Note Filler</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      body {
+        width: 320px;
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 13px;
+        color: #1f2937;
+        background: #ffffff;
+      }
+      .header {
+        padding: 14px 16px;
+        background: #0f766e;
+        color: #ffffff;
+      }
+      .header h1 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .header p {
+        margin: 4px 0 0;
+        font-size: 11px;
+        opacity: 0.85;
+      }
+      .body {
+        padding: 16px;
+      }
+      .status {
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 14px;
+        font-size: 12px;
+        line-height: 1.4;
+      }
+      .status.ok {
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        color: #065f46;
+      }
+      .status.warn {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        color: #92400e;
+      }
+      .status.run {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1e40af;
+      }
+      button {
+        width: 100%;
+        border: none;
+        border-radius: 8px;
+        padding: 11px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-bottom: 8px;
+      }
+      button.primary {
+        background: #0f766e;
+        color: #fff;
+      }
+      button.primary:disabled {
+        background: #d1d5db;
+        color: #6b7280;
+        cursor: not-allowed;
+      }
+      button.secondary {
+        background: #f3f4f6;
+        color: #374151;
+      }
+      .field {
+        margin-bottom: 14px;
+      }
+      .field-label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #6b7280;
+      }
+      .segmented {
+        display: flex;
+        gap: 6px;
+      }
+      .segmented button {
+        flex: 1;
+        width: auto;
+        margin-bottom: 0;
+        padding: 9px 4px;
+        font-size: 12px;
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #e5e7eb;
+      }
+      .segmented button.active {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: #ffffff;
+      }
+      .site-row {
+        display: flex;
+        gap: 6px;
+      }
+      .site-row input {
+        flex: 1;
+        min-width: 0;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 9px 10px;
+        font-size: 12px;
+        font-family: inherit;
+        color: #1f2937;
+      }
+      .site-row input:focus {
+        outline: none;
+        border-color: #0f766e;
+      }
+      .site-row button {
+        width: auto;
+        margin-bottom: 0;
+        padding: 9px 14px;
+        font-size: 12px;
+        background: #0f766e;
+        color: #ffffff;
+      }
+      .field-error {
+        margin-top: 6px;
+        font-size: 11px;
+        color: #b91c1c;
+      }
+      .hint a {
+        color: #0f766e;
+      }
+      .progress {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #374151;
+      }
+      .bar {
+        height: 6px;
+        border-radius: 999px;
+        background: #e5e7eb;
+        overflow: hidden;
+        margin-top: 6px;
+      }
+      .bar > span {
+        display: block;
+        height: 100%;
+        background: #0f766e;
+        width: 0%;
+        transition: width 0.2s ease;
+      }
+      .hint {
+        margin-top: 10px;
+        font-size: 11px;
+        color: #6b7280;
+        line-height: 1.4;
+      }
+      code {
+        background: #f3f4f6;
+        padding: 1px 4px;
+        border-radius: 4px;
+        font-size: 11px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Kipu Shift Note Filler</h1>
+      <p id="siteLabel">Not configured</p>
+    </div>
+    <div class="body">
+      <div id="status" class="status warn">Checking current tab&hellip;</div>
+
+      <div id="siteField" class="field" style="display: none">
+        <span class="field-label">Kipu site</span>
+        <div class="site-row">
+          <input
+            id="siteInput"
+            type="text"
+            placeholder="yourteam.kipuworks.com"
+            spellcheck="false"
+            autocapitalize="off"
+            autocomplete="off"
+          />
+          <button type="button" id="siteSave">Save</button>
+        </div>
+        <div id="siteError" class="field-error" style="display: none"></div>
+      </div>
+
+      <div id="buildingField" class="field">
+        <span class="field-label">Building</span>
+        <div id="buildings" class="segmented">
+          <button type="button" data-building="6">Aspen</button>
+          <button type="button" data-building="7">Snowmass</button>
+          <button type="button" data-building="8">Vail</button>
+        </div>
+      </div>
+
+      <button id="start" class="primary" disabled>Fill in bubbles</button>
+      <button id="stop" class="secondary" style="display: none">Stop</button>
+
+      <div id="progressWrap" class="progress" style="display: none">
+        <div id="progressText">Working&hellip;</div>
+        <div class="bar"><span id="progressBar"></span></div>
+      </div>
+
+      <div class="hint">
+        You must be logged in and on your Kipu <code>/patients</code> page for
+        this to run. It will open the chosen building's occupancy list and
+        process each client automatically.
+        <a href="#" id="changeSite">Change site</a>
+      </div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>
