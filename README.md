@@ -53,24 +53,29 @@ progressively, so it waits for the count to hold steady across several polls
 before locking in the queue.
 
 **Filling the form.** For each client it opens Shift Notes, clicks **Add form**,
-creates a **New Shift Note**, and fills it in:
+creates a **New Shift Note**, and fills it from the profile for the building
+you picked. Shared fields, then the two that differ:
 
-| Field | Selection |
+| Field | All buildings |
 | --- | --- |
 | ADLS | Bathing, Grooming, Neat, Clean |
 | Appetite | Within Normal Limits |
-| Behavior | Cooperative |
-| Thinking | *(left blank)* |
+| Behavior | Cooperative, Restless |
+| Thinking | Black & White Thinking, Negativity |
 | Eye Contact | Appropriate |
 | Affect | Appropriate |
-| Mood | Euthymic |
+| Mood | Euthymic, Anxious |
 | Speech | Appropriate |
 | Orientation | Time, Person, Place, and Situation |
 | Insight | Good |
 | Risk Thoughts/Behaviors | None Reported |
 | Additional Info about Risk Thoughts/Behaviors | None |
-| Withdrawal and Detox Symptoms | None |
-| PAW Symptoms | None |
+| Current Craving Level | 8 |
+
+| Field | Aspen / Vail | Snowmass |
+| --- | --- | --- |
+| Withdrawal and Detox Symptoms | None | Cravings, Lack of Energy |
+| PAW Symptoms | Cravings, Lack of Energy | None |
 
 Options are matched by **section title + option label text** rather than element
 IDs, since Kipu regenerates IDs on every page load. The date field is a jQuery
@@ -91,8 +96,8 @@ custom domain, add it to `host_permissions` and `content_scripts.matches` in
 `manifest.json` and relax `HOST_SUFFIX` in `popup.js`.
 
 Building names and their `p_building` ids (Aspen `6`, Snowmass `7`, Vail `8`)
-are defined in one place — `BUILDINGS` in `popup.js`. The shift-note defaults
-live in `fillShiftNoteForm()` in `content.js`.
+are defined in one place — `BUILDINGS` in `popup.js`. The per-building
+checkbox profiles live in `PROFILE_BY_BUILDING` in `content.js`.
 
 ## Project layout
 
@@ -114,7 +119,7 @@ docs/                           images used by this README
 - If you navigate away mid-run the loop pauses; starting again restarts from the
   top of the occupancy list.
 - If Kipu renames a section title or option label, update the matching string in
-  `fillShiftNoteForm()` in `content.js`.
+  `PROFILE_BY_BUILDING` in `content.js`.
 
 ## Note on patient data
 

@@ -17,23 +17,27 @@ patients page) and it:
    - Opens **Shift Notes** (`/patients/{id}/records?process=88`).
    - Clicks **Add form**.
    - Clicks **New Shift Note**.
-   - Fills the form with these defaults:
-     | Field | Selection |
+   - Fills the form from the profile for the chosen building:
+     | Field | All buildings |
      | --- | --- |
      | ADLS | Bathing, Grooming, Neat, Clean |
      | Appetite | Within Normal Limits |
-     | Behavior | Cooperative |
-     | Thinking | *(left blank)* |
+     | Behavior | Cooperative, Restless |
+     | Thinking | Black & White Thinking, Negativity |
      | Eye Contact | Appropriate |
      | Affect | Appropriate |
-     | Mood | Euthymic |
+     | Mood | Euthymic, Anxious |
      | Speech | Appropriate |
      | Orientation | Time, Person, Place, and Situation |
      | Insight | Good |
      | Risk Thoughts/Behaviors | None Reported |
      | Additional Info about Risk Thoughts/Behaviors | None |
-     | Withdrawal and Detox Symptoms | None |
-     | PAW Symptoms | None |
+     | Current Craving Level | 8 |
+
+     | Field | Aspen / Vail | Snowmass |
+     | --- | --- | --- |
+     | Withdrawal and Detox Symptoms | None | Cravings, Lack of Energy |
+     | PAW Symptoms | Cravings, Lack of Energy | None |
    - Clicks **Update**.
 4. Repeats until all clients are done.
 
@@ -81,7 +85,7 @@ instead of filling notes for the wrong unit.
 - Open the page's **DevTools console** and filter for `[KipuShiftNote]` to see
   per-client progress and any options/sections it couldn't find.
 - If Kipu renames a section title or option label, update the corresponding
-  string in `fillShiftNoteForm()` inside `content.js`.
+  string in `PROFILE_BY_BUILDING` inside `content.js`.
 - The site must end in `.kipuworks.com`, which is the only host the manifest
   grants access to. For a Kipu instance on a custom domain, add it to
   `host_permissions` and `content_scripts.matches` in `manifest.json` and

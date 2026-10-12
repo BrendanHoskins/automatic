@@ -322,40 +322,92 @@
     window.location.href = link.href;
   }
 
+  // ---- checkbox profiles per building ----------------------------------------
+  //
+  // Keys are section titles as they appear on the form; values are the option
+  // labels that should end up checked in that section (and nothing else).
+
+  const SHARED_SELECTIONS = {
+    "ADLS:": ["Bathing", "Grooming", "Neat", "Clean"],
+    "Appetite:": ["Within Normal Limits"],
+    "Behavior:": ["Cooperative", "Restless"],
+    "Thinking:": ["Black & White Thinking", "Negativity"],
+    "Eye Contact:": ["Appropriate"],
+    "Affect:": ["Appropriate"],
+    "Mood:": ["Euthymic", "Anxious"],
+    "Speech:": ["Appropriate"],
+    "Orientation:": ["Time, Person, Place, and Situation"],
+    "Insight:": ["Good"],
+    "Risk Thoughts/Behaviors:": ["None Reported"],
+    "Additional Information about Risk Thoughts and Behaviors:": ["None"],
+    "Current Craving Level:": ["8"],
+  };
+
+  // Where cravings get recorded is the only thing that differs by building.
+  const CRAVINGS_UNDER_PAW = {
+    "Withdrawal and Detox Symptoms:": ["None"],
+    "PAW Symptoms:": ["Cravings", "Lack of Energy"],
+  };
+  const CRAVINGS_UNDER_WITHDRAWAL = {
+    "Withdrawal and Detox Symptoms:": ["Cravings", "Lack of Energy"],
+    "PAW Symptoms:": ["None"],
+  };
+
+  // Keyed by the occupancy board's p_building id (see BUILDINGS in popup.js).
+  const PROFILE_BY_BUILDING = {
+    6: { ...SHARED_SELECTIONS, ...CRAVINGS_UNDER_PAW }, // Aspen
+    7: { ...SHARED_SELECTIONS, ...CRAVINGS_UNDER_WITHDRAWAL }, // Snowmass
+    8: { ...SHARED_SELECTIONS, ...CRAVINGS_UNDER_PAW }, // Vail
+  };
+
+  function profileFor(buildingId) {
+    return PROFILE_BY_BUILDING[Number(buildingId)] || null;
+  }
+
   // ---- step: fill and submit the form ----------------------------------------
 
-  function checkInSection(titleText, labelTexts) {
+  function findSection(titleText) {
     const wantTitle = normTitle(titleText);
     const items = document.querySelectorAll(".patient_evaluation_item");
-    let section = null;
     for (const item of items) {
       const titleEl = item.querySelector(".item_title");
-      if (titleEl && normTitle(titleEl.textContent) === wantTitle) {
-        section = item;
-        break;
-      }
+      if (titleEl && normTitle(titleEl.textContent) === wantTitle) return item;
     }
+    return null;
+  }
+
+  function checkboxForLabel(label) {
+    const cb = label.htmlFor
+      ? document.getElementById(label.htmlFor)
+      : label.closest(".wrap")?.querySelector('input[type="checkbox"]');
+    return cb && cb.type === "checkbox" ? cb : null;
+  }
+
+  // Make a section's checked boxes exactly match labelTexts. Kipu pre-checks
+  // defaults like "None", so anything not in the list is unchecked too;
+  // otherwise "None" could sit alongside real symptoms.
+  function setSection(titleText, labelTexts) {
+    const section = findSection(titleText);
     if (!section) {
       console.warn(LOG, "Section not found:", titleText);
       return;
     }
 
-    const labels = section.querySelectorAll("label");
-    labelTexts.forEach((wanted) => {
-      const want = normalize(wanted);
-      let matched = false;
-      for (const label of labels) {
-        if (normalize(label.textContent) !== want) continue;
-        const cb = label.htmlFor
-          ? document.getElementById(label.htmlFor)
-          : label.closest(".wrap")?.querySelector('input[type="checkbox"]');
-        if (cb && cb.type === "checkbox") {
-          if (!cb.checked) cb.checked = true;
-          matched = true;
-        }
-        break;
+    const wanted = new Set(labelTexts.map(normalize));
+    const found = new Set();
+    section.querySelectorAll("label").forEach((label) => {
+      const cb = checkboxForLabel(label);
+      if (!cb) return;
+      const text = normalize(label.textContent);
+      const shouldCheck = wanted.has(text);
+      if (cb.checked !== shouldCheck) cb.checked = shouldCheck;
+      if (shouldCheck) found.add(text);
+    });
+
+    labelTexts.forEach((wantedLabel) => {
+      if (!found.has(normalize(wantedLabel))) {
+        console.warn(LOG, `Option not found: ${titleText} > ${wantedLabel}`);
       }
-      if (!matched) console.warn(LOG, `Option not found: ${titleText} > ${wanted}`);
     });
   }
 
@@ -460,24 +512,23 @@
     });
   }
 
-  function fillShiftNoteForm() {
+  function fillShiftNoteForm(state) {
     setDateField();
-    checkInSection("ADLS:", ["Bathing", "Grooming", "Neat", "Clean"]);
-    checkInSection("Appetite:", ["Within Normal Limits"]);
-    checkInSection("Behavior:", ["Cooperative"]);
-    // Thinking: intentionally left blank.
-    checkInSection("Eye Contact:", ["Appropriate"]);
-    checkInSection("Affect:", ["Appropriate"]);
-    checkInSection("Mood:", ["Euthymic"]);
-    checkInSection("Speech:", ["Appropriate"]);
-    checkInSection("Orientation:", ["Time, Person, Place, and Situation"]);
-    checkInSection("Insight:", ["Good"]);
-    checkInSection("Risk Thoughts/Behaviors:", ["None Reported"]);
-    checkInSection("Additional Information about Risk Thoughts and Behaviors:", [
-      "None",
-    ]);
-    checkInSection("Withdrawal and Detox Symptoms:", ["None"]);
-    checkInSection("PAW Symptoms:", ["None"]);
+    const profile = profileFor(state.buildingId);
+    if (!profile) {
+      console.warn(
+        LOG,
+        `No checkbox profile for building ${state.buildingId}; skipping fill.`
+      );
+      return;
+    }
+    console.log(
+      LOG,
+      `Filling ${state.buildingName || "building"} checkbox profile.`
+    );
+    Object.entries(profile).forEach(([title, labels]) => {
+      setSection(title, labels);
+    });
   }
 
   async function doFill(state) {
@@ -525,7 +576,7 @@
     // 4. Small settle delay so any last default values finish applying.
     await sleep(600);
 
-    fillShiftNoteForm();
+    fillShiftNoteForm(state);
     await ensureDateSet();
 
     // Keep forcing the date to today right up until (and through) submit, so a
